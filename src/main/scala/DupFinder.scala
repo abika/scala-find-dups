@@ -15,29 +15,6 @@ case class Config(verbose: Boolean = false,
 object DupFinder {
   val LOG = Logger(LoggerFactory.getLogger(DupFinder.getClass.getName))
 
-  def testDirectory(d: File): Boolean =
-    if (!d.isDirectory) {
-      LOG.debug("not a directory: " + d)
-      false
-    } else {
-      true
-    }
-
-  def listFiles(d: File): Array[File] =
-    if (testDirectory(d)) {
-      d.listFiles
-    } else {
-      Array[File]()
-    }
-
-  def listFilesRec(d: File): Array[File] =
-   if (testDirectory(d)) {
-     val these = d.listFiles
-     these ++ these.filter(_.isDirectory).flatMap(listFilesRec)
-   } else {
-     Array[File]()
-   }
-
   def main(args: Array[String]): Unit = {
 
     val parser = new scopt.OptionParser[Config]("dupfinder") {
@@ -47,7 +24,7 @@ object DupFinder {
         c.copy(verbose = true)
       } text ("enable debug output")
 
-      opt[Unit]("recursive") action { (_, c) =>
+      opt[Unit]('r', "recursive") action { (_, c) =>
         c.copy(recursive = true)
       } text ("include subdirectories (recursive)")
 
@@ -63,7 +40,7 @@ object DupFinder {
     // parser.parse returns Option[C]
     parser.parse(args, Config()) map { config =>
       // get all files
-      (if (config.recursive) listFilesRec(config.dir) else listFiles(config.dir)).foreach(println)
+      (if (config.recursive) Utils.listFilesRec(config.dir) else Utils.listFiles(config.dir)).foreach(println)
     } getOrElse {
       // arguments are bad, usage message will have been displayed
     }
