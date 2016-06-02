@@ -40,7 +40,15 @@ object DupFinder {
     // parser.parse returns Option[C]
     parser.parse(args, Config()) map { config =>
       // get all files
-      (if (config.recursive) Utils.listFilesRec(config.dir) else Utils.listFiles(config.dir)).foreach(println)
+      val files = if (config.recursive) Utils.listFilesRec(config.dir) else Utils.listFiles(config.dir)
+      val groups = files.groupBy(new FileKey(_))
+
+      // print all none-single groups
+      groups
+        .filter{case (fk, fs) => fs.length > 1}
+        .foreach(t => println(t._1 + " : " + t._2.mkString(",")))
+
+      println("#duplicates found: " + groups.map{case (fk, fs) => fs.length - 1}.sum)
     } getOrElse {
       // arguments are bad, usage message will have been displayed
     }
