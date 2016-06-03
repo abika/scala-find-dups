@@ -5,6 +5,7 @@
 
 import java.io.File
 import java.nio.file.{Files, Path}
+import java.security.{DigestInputStream, MessageDigest}
 
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
@@ -48,4 +49,22 @@ object Utils {
     } else {
       true
     }
+
+  def md5sum(f: File): Array[Byte] = {
+    val md = MessageDigest.getInstance("MD5")
+
+    // whole file at once in memory, no good
+    //md.update(Files.readAllBytes(file.toPath))
+
+    val buffer = new Array[Byte](8192)
+    // Scala doesn't know try-with-resource, but...
+    for {
+      is <- resource.managed(Files.newInputStream(f.toPath))
+      dis <- resource.managed(new DigestInputStream(is, md))
+    } {
+      while (dis.read(buffer) != -1) {}
+    }
+
+    md.digest()
+  }
 }
