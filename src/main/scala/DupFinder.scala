@@ -1,6 +1,7 @@
-/**
-  * Created by zeta on 31.05.16.
-  */
+/*
+ * DupFinder
+ * Copyright (C) 2016 A.B.
+ */
 
 import java.io.File
 
@@ -12,8 +13,12 @@ case class Config(verbose: Boolean = false,
                   recursive: Boolean = false,
                   dir: File = new File("."))
 
+/** Find duplicate files.
+  *
+  * @author Alexander Bikadorov { @literal <bikaejkb@mail.tu-berlin.de>}
+  */
 object DupFinder {
-  val LOG = Logger(LoggerFactory.getLogger(DupFinder.getClass.getName))
+  val Log = Logger(LoggerFactory.getLogger(DupFinder.getClass.getName))
 
   def main(args: Array[String]): Unit = {
 
@@ -40,15 +45,20 @@ object DupFinder {
     // parser.parse returns Option[C]
     parser.parse(args, Config()) map { config =>
       // get all files
-      val files = if (config.recursive) Utils.listFilesRec(config.dir) else Utils.listFiles(config.dir)
+      val files = if (config.recursive) {
+        Utils.listFilesRec(config.dir)
+      } else {
+        Utils.listFiles(config.dir)
+      }
+      // grouping
       val groups = files.groupBy(new FileKey(_))
 
       // print all none-single groups
       groups
         .filter{case (fk, fs) => fs.length > 1}
-        .foreach(t => println(t._1 + " : " + t._2.mkString(",")))
+        .foreach(t => Log.debug(t._1 + " : " + t._2.mkString(",")))
 
-      println("#duplicates found: " + groups.map{case (fk, fs) => fs.length - 1}.sum)
+      Log.info("#duplicates found: " + groups.map{case (fk, fs) => fs.length - 1}.sum)
     } getOrElse {
       // arguments are bad, usage message will have been displayed
     }

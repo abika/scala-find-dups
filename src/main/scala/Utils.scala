@@ -1,3 +1,8 @@
+/*
+ * DupFinder
+ * Copyright (C) 2016 A.B.
+ */
+
 import java.io.File
 import java.nio.file.{Files, Path}
 
@@ -6,11 +11,12 @@ import org.slf4j.LoggerFactory
 
 import scala.collection.JavaConverters._
 
-/**
-  * Utility functions.
+/** Utility functions.
+  *
+  * @author Alexander Bikadorov { @literal <bikaejkb@mail.tu-berlin.de>}
   */
 object Utils {
-  val LOG = Logger(LoggerFactory.getLogger(DupFinder.getClass.getName))
+  val Log = Logger(LoggerFactory.getLogger(Utils.getClass.getName))
 
   def listFiles(d: File): Array[File] =
     if (isDirectory(d)) {
@@ -37,7 +43,7 @@ object Utils {
 
   private def isDirectory(d: File): Boolean =
     if (!d.isDirectory) {
-      LOG.debug("not a directory: " + d)
+      Log.debug("not a directory: " + d)
       false
     } else {
       true
