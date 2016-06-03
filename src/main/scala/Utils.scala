@@ -6,7 +6,9 @@
 import java.io.File
 import java.nio.file.{Files, Path}
 import java.security.{DigestInputStream, MessageDigest}
+import java.util.logging.LogManager
 
+import ch.qos.logback.classic.Level
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
 
@@ -18,6 +20,11 @@ import scala.collection.JavaConverters._
   */
 object Utils {
   val Log = Logger(LoggerFactory.getLogger(Utils.getClass.getName))
+
+  def setDebugLevel(level: Level): Unit = {
+    val root = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
+    root.asInstanceOf[ch.qos.logback.classic.Logger].setLevel(level)
+  }
 
   def listFiles(d: File): Array[File] =
     if (isDirectory(d)) {

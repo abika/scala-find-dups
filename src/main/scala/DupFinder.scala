@@ -7,6 +7,7 @@ import java.io.File
 
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
+import ch.qos.logback.classic.Level
 
 // argument configuration
 case class Config(verbose: Boolean = false,
@@ -25,7 +26,7 @@ object DupFinder {
     val parser = new scopt.OptionParser[Config]("dupfinder") {
       head("dupfinder", "0.1")
 
-      opt[Unit]("verbose") action { (_, c) =>
+      opt[Unit]('v', "verbose") action { (_, c) =>
         c.copy(verbose = true)
       } text ("enable debug output")
 
@@ -44,6 +45,9 @@ object DupFinder {
 
     // parser.parse returns Option[C]
     parser.parse(args, Config()) map { config =>
+      // set global log level
+      Utils.setDebugLevel(if (config.verbose) Level.DEBUG else Level.INFO)
+
       // get all files
       val files = if (config.recursive) {
         Utils.listFilesRec(config.dir)
