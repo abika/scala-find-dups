@@ -60,9 +60,9 @@ object DupFinder {
       // print all none-single groups
       groups
         .filter{case (fk, fs) => fs.length > 1}
-        .foreach(t => Log.debug(t._1 + " : " + t._2.mkString(",")))
+        .foreach(t => Log.debug(s"${t._1} : ${t._2.mkString(", ")}"))
 
-      Log.info("#duplicates found: " + groups.map{case (fk, fs) => fs.length - 1}.sum)
+      Log.info(s"scanned ${files.length} files. Found ${groups.map{case (fk, fs) => fs.length - 1}.sum} duplicates")
     } getOrElse {
       // arguments are bad, usage message will have been displayed
     }

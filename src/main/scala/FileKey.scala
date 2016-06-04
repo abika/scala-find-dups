@@ -22,5 +22,5 @@ class FileKey(val file: File) {
 
   override def hashCode: Int = 31 + 7 * file.length().toInt
 
-  override def toString: String = file + "#" + hashCode
+  override def toString: String = s"K{${hashCode.toString}}"
 }

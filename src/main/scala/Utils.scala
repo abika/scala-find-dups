@@ -51,7 +51,7 @@ object Utils {
 
   private def isDirectory(d: File): Boolean =
     if (!d.isDirectory) {
-      Log.debug("not a directory: " + d)
+      Log.warn(s"not a directory: $d")
       false
     } else {
       true
