@@ -49,20 +49,23 @@ object DupFinder {
       Utils.setDebugLevel(if (config.verbose) Level.DEBUG else Level.INFO)
 
       // get all files
-      val files = if (config.recursive) {
-        Utils.listFilesRec(config.dir)
+      val files = (if (config.recursive) {
+        // disappointing: no duck typing possible here
+        Utils.filesInPath(config.dir.toPath).map(_.toFile).toArray
       } else {
         Utils.listFiles(config.dir)
-      }
+      }).filter(_.isFile)
+
       // grouping
       val groups = files.groupBy(new FileKey(_))
 
       // print all none-single groups
-      groups
-        .filter{case (fk, fs) => fs.length > 1}
-        .foreach(t => Log.debug(s"${t._1} : ${t._2.mkString(", ")}"))
+      val dupGroups = groups.filter{case (fk, fs) => fs.length > 1}
+      dupGroups.foreach(t => println(t._2.mkString(" ")))
 
-      Log.info(s"scanned ${files.length} files. Found ${groups.map{case (fk, fs) => fs.length - 1}.sum} duplicates")
+      println(s"Scanned ${files.length} files." +
+        s" Found ${dupGroups.map{case (fk, fs) => fs.length}.sum - dupGroups.size} duplicates" +
+        s" in ${dupGroups.size} groups.")
     } getOrElse {
       // arguments are bad, usage message will have been displayed
     }
