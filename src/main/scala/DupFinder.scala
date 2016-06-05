@@ -21,8 +21,7 @@ case class Config(verbose: Boolean = false,
 object DupFinder {
   val Log = Logger(LoggerFactory.getLogger(DupFinder.getClass.getName))
 
-  def main(args: Array[String]): Unit = {
-
+  private def parseArgs(args: Array[String]): Option[Config] = {
     val parser = new scopt.OptionParser[Config]("dupfinder") {
       head("dupfinder", "0.1")
 
@@ -40,11 +39,14 @@ object DupFinder {
 
       help("help") text ("prints this usage text")
 
-      //note("some notes.\n")
+      note("Find duplicate files. Duplicates are identified by file content" +
+        " and sorted by modification time (oldest first).\n")
     }
+    parser.parse(args, Config())
+  }
 
-    // parser.parse returns Option[C]
-    parser.parse(args, Config()) map { config =>
+  def main(args: Array[String]): Unit = {
+    parseArgs(args) map { config =>
       // set global log level
       Utils.setDebugLevel(if (config.verbose) Level.DEBUG else Level.INFO)
 
@@ -56,15 +58,15 @@ object DupFinder {
         Utils.listFiles(config.dir)
       }).filter(_.isFile)
 
-      // grouping
-      val groups = files.groupBy(new FileKey(_))
+      // grouping and sorting
+      val groups = files.groupBy(new FileKey(_)).mapValues(_.sortBy(_.lastModified()))
 
       // print all none-single groups
-      val dupGroups = groups.filter{case (fk, fs) => fs.length > 1}
+      val dupGroups = groups.filter { case (fk, fs) => fs.length > 1 }
       dupGroups.foreach(t => println(t._2.mkString(" ")))
 
       println(s"Scanned ${files.length} files." +
-        s" Found ${dupGroups.map{case (fk, fs) => fs.length}.sum - dupGroups.size} duplicates" +
+        s" Found ${dupGroups.map { case (fk, fs) => fs.length }.sum - dupGroups.size} duplicates" +
         s" in ${dupGroups.size} groups.")
     } getOrElse {
       // arguments are bad, usage message will have been displayed
