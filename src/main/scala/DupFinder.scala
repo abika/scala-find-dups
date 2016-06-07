@@ -3,15 +3,21 @@
  * Copyright (C) 2016 A.B.
  */
 
-import java.io.File
 
+
+import java.io.File
+import java.util.regex.Pattern
+
+import ch.qos.logback.classic.Level
 import com.typesafe.scalalogging.Logger
 import org.slf4j.LoggerFactory
-import ch.qos.logback.classic.Level
+
+import scala.util.Try
 
 // argument configuration
 case class Config(verbose: Boolean = false,
                   recursive: Boolean = false,
+                  regex: Option[String] = None,
                   dir: File = new File("."))
 
 /** Find duplicate files.
@@ -32,6 +38,15 @@ object DupFinder {
       opt[Unit]('r', "recursive") action { (_, c) =>
         c.copy(recursive = true)
       } text ("include subdirectories (recursive)")
+
+      opt[String]('x', "regex") action { (x, c) =>
+        c.copy(regex = Some(x)) } validate { x =>
+        if (Try(Pattern.compile(x)).isSuccess) {
+          success
+        } else {
+          failure("Value <regex> not a valid regular expression")
+        }
+      } valueName("<regex>") text ("regular expression that must match file name for deletion")
 
       arg[File]("<search-directory>") required() valueName ("dir") action { (x, c) =>
         c.copy(dir = x)
@@ -61,13 +76,28 @@ object DupFinder {
       // grouping and sorting
       val groups = files.groupBy(new FileKey(_)).mapValues(_.sortBy(_.lastModified()))
 
-      // print all none-single groups
-      val dupGroups = groups.filter { case (fk, fs) => fs.length > 1 }
-      dupGroups.foreach(t => println(t._2.mkString(" ")))
+      // get all none-single groups
+      val dupGroups = groups.filter { case (_, fs) => fs.length > 1 }
+      //dupGroups.foreach(t => println(t._2.mkString(" ")))
+
+      val divGroups = dupGroups.values.map(fs => {
+        // take the one file to keep...
+        fs.partition(f => f == (config.regex match {
+          case Some(regex) => fs.find(!_.getName.matches(regex)).getOrElse(fs.head)
+          case None => fs.head
+        // ... and all files not to delete
+        }) || config.regex.isDefined && !f.getName.matches(config.regex.get))
+      }).toList
+
+      // print what to keep and what to delete
+      divGroups.foreach(t => println(s"${t._1.mkString(" ")} ### ${t._2.mkString(" ")}"))
 
       println(s"Scanned ${files.length} files." +
-        s" Found ${dupGroups.map { case (fk, fs) => fs.length }.sum - dupGroups.size} duplicates" +
+        s" Found ${dupGroups.map { case (_, fs) => fs.length }.sum - dupGroups.size} duplicates" +
         s" in ${dupGroups.size} groups.")
+
+
+
     } getOrElse {
       // arguments are bad, usage message will have been displayed
     }
