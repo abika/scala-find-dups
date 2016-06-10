@@ -26,6 +26,8 @@ object DupFinder {
   // argument configuration
   case class Config(verbose: Boolean = false,
                     recursive: Boolean = false,
+                    printDeletable: Boolean = false,
+                    delete: Boolean = false,
                     regex: Option[String] = None,
                     dir: File = new File("."))
 
@@ -39,7 +41,15 @@ object DupFinder {
 
       opt[Unit]('r', "recursive") action { (_, c) =>
         c.copy(recursive = true)
-      } text ("include subdirectories (recursive)")
+      } text ("include subdirectories (recursive search)")
+
+      opt[Unit]('d', "print-deletable") action { (_, c) =>
+        c.copy(printDeletable = true)
+      } text ("print only duplicate groups with deletable files")
+
+      opt[Unit]('D', "delete") action { (_, c) =>
+        c.copy(delete = true)
+      } text ("delete redundant duplicate files(!)")
 
       opt[String]('x', "regex") action { (x, c) =>
         c.copy(regex = Some(x)) } validate { x =>
@@ -75,12 +85,18 @@ object DupFinder {
       val judged = Utils.definedOrDefault(config.regex, dupGroups.classify(), dupGroups.classify)
 
       // print what to keep and what to delete
-      judged.foreach(t => println(s"${t.originals.mkString(" ")}" +
-        s" ### ${t.duplicates.mkString(" ")}"))
+      judged
+        .filter(config.printDeletable || !_.duplicates.isEmpty)
+        .foreach(t => println(s"${t.originals.mkString(" ")}" +
+          s" ### ${t.duplicates.mkString(" ")}"))
+
+      val deletable = judged.map(_.duplicates).flatten
 
       println(s"Scanned ${groups.map(_.length).sum} files." +
         s" Found ${dupGroups.map(_.length).sum - dupGroups.length} duplicates" +
-        s" in ${dupGroups.size} groups.")
+        s" in ${dupGroups.size} groups." +
+        s" ${deletable.length} file(s) (${Utils.hByteCount(deletable.map(_.length()).sum)})" +
+        s" marked for deletion.")
 
     } getOrElse {
       // arguments are bad, usage message will have been displayed

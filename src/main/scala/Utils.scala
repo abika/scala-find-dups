@@ -77,4 +77,14 @@ object Utils {
 
   def definedOrDefault[A, B](opt: Option[A], f0: => B, f1: A => B): B =
     if (opt.isDefined) f1(opt.get) else f0
+
+  def hByteCount(bytes: Long): String = {
+    val unit = 1000;
+    if (bytes < unit) {
+      bytes + " B";
+    } else {
+      val exp = (Math.log(bytes) / Math.log(unit)).toInt;
+      f"${bytes / Math.pow(unit, exp)}%.1f ${"kMGTPE".charAt(exp - 1)}B";
+    }
+  }
 }
