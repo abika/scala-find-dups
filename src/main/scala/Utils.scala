@@ -20,6 +20,17 @@ import scala.collection.JavaConverters._
 object Utils {
   val Log = Logger(LoggerFactory.getLogger(Utils.getClass.getName))
 
+  implicit class ExecBoolean(val b: Boolean) {
+    def doIfTrue(f: => Any): Boolean = {
+      if (b) f
+      b
+    }
+    def doIfFalse(f: => Any): Boolean = {
+      if (!b) f
+      b
+    }
+  }
+
   def setDebugLevel(level: Level): Unit = {
     val root = LoggerFactory.getLogger(org.slf4j.Logger.ROOT_LOGGER_NAME)
     root.asInstanceOf[ch.qos.logback.classic.Logger].setLevel(level)
@@ -27,21 +38,7 @@ object Utils {
 
   /** Get all file objects (files, directories, ...) in a directory. */
   def listFiles(d: File): Array[File] =
-    if (!isDirectory(d)) {
-      Array.empty
-    } else {
-      d.listFiles
-    }
-
-  // unused
-  private def listFilesRec(d: File): Array[File] =
-    if (!isDirectory(d)) {
-      Array.empty
-    } else {
-      val these = d.listFiles
-      these ++ these.filter(f => f.isDirectory
-        && !Files.isSymbolicLink(f.toPath)).flatMap(listFilesRec)
-    }
+    if (!isDirectory(d)) Array.empty else d.listFiles
 
   /** Get all file objects (files, directories, ...) in a directory and subdirectories. */
   def filesInPath(p: Path) : Stream[Path] =
@@ -53,12 +50,7 @@ object Utils {
     }
 
   private def isDirectory(d: File): Boolean =
-    if (!d.isDirectory) {
-      Log.warn(s"not a directory: $d")
-      false
-    } else {
-      true
-    }
+    d.isDirectory doIfFalse {Log.warn(s"not a directory: $d")}
 
   def md5sum(f: File): Array[Byte] = {
     if (!f.isFile) {
@@ -82,4 +74,7 @@ object Utils {
       md.digest()
     }
   }
+
+  def definedOrDefault[A, B](opt: Option[A], f0: => B, f1: A => B): B =
+    if (opt.isDefined) f1(opt.get) else f0
 }

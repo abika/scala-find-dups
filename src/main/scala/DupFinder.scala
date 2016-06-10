@@ -72,12 +72,7 @@ object DupFinder {
       // get all none-single groups
       val dupGroups = groups.filter {_.length > 1}
 
-      val judged =
-        // somehow long
-        if (config.regex.isDefined)
-          dupGroups.classify(config.regex.get)
-        else
-          dupGroups.classify()
+      val judged = Utils.definedOrDefault(config.regex, dupGroups.classify(), dupGroups.classify)
 
       // print what to keep and what to delete
       judged.foreach(t => println(s"${t.originals.mkString(" ")}" +
