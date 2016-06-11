@@ -98,6 +98,11 @@ object DupFinder {
         s" ${deletable.length} file(s) (${Utils.hByteCount(deletable.map(_.length()).sum)})" +
         s" marked for deletion.")
 
+      if (config.delete) {
+        val deletedCount = deletable.count(_.delete())
+        println(s"Deleted ${deletedCount} files.")
+      }
+
     } getOrElse {
       // arguments are bad, usage message will have been displayed
     }
