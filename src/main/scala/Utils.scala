@@ -18,7 +18,7 @@ import scala.collection.JavaConverters._
   * @author Alexander Bikadorov { @literal <bikaejkb@mail.tu-berlin.de>}
   */
 object Utils {
-  val Log = Logger(LoggerFactory.getLogger(Utils.getClass.getName))
+  private val Log = Logger(LoggerFactory.getLogger(Utils.getClass.getName))
 
   implicit class ExecBoolean(val b: Boolean) {
     def doIfTrue(f: => Any): Boolean = {

@@ -3,8 +3,6 @@
  * Copyright (C) 2016 A.B.
  */
 
-
-
 import java.io.File
 import java.util.regex.Pattern
 
@@ -21,7 +19,7 @@ import FileScanner.FileGroups
   * @author Alexander Bikadorov { @literal <bikaejkb@mail.tu-berlin.de>}
   */
 object DupFinder {
-  val Log = Logger(LoggerFactory.getLogger(DupFinder.getClass.getName))
+  private val Log = Logger(LoggerFactory.getLogger(DupFinder.getClass.getName))
 
   // argument configuration
   case class Config(verbose: Boolean = false,
@@ -32,7 +30,7 @@ object DupFinder {
                     dir: File = new File("."))
 
   private def parseArgs(args: Array[String]): Option[Config] = {
-    val parser = new scopt.OptionParser[Config]("dupfinder") {
+    new scopt.OptionParser[Config]("dupfinder") {
       head("Duplicate finder", "0.1")
 
       opt[Unit]('v', "verbose") action { (_, c) =>
@@ -68,8 +66,7 @@ object DupFinder {
 
       note("Find duplicate files. Duplicates are identified by file content" +
         " and sorted by modification time (oldest first).\n")
-    }
-    parser.parse(args, Config())
+    }.parse(args, Config())
   }
 
   def main(args: Array[String]): Unit = {
@@ -87,8 +84,7 @@ object DupFinder {
       // print what to keep and what to delete
       judged
         .filter(config.printDeletable || !_.duplicates.isEmpty)
-        .foreach(t => println(s"${t.originals.mkString(" ")}" +
-          s" ### ${t.duplicates.mkString(" ")}"))
+        .foreach(println)
 
       val deletable = judged.map(_.duplicates).flatten
 

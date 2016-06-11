@@ -1,11 +1,15 @@
-import java.io.File
-
 /*
  * DupFinder
  * Copyright (C) 2016 A.B.
  */
 
-case class FileGroup(originals: Array[File], duplicates: Array[File])
+import java.io.File
+
+sealed case class FileGroup(originals: Array[File], duplicates: Array[File]) {
+  override def toString(): String =
+    s"${originals.mkString(" ")}" +
+    s" ### ${duplicates.mkString(" ")}"
+}
 
 /**
   * Scan folder and find duplicate files.
